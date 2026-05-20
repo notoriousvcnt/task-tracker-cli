@@ -1,7 +1,7 @@
 import argparse
 import mysql_database
-from simple_log import log
 import simple_log
+from simple_log import log
 
 
 connection = mysql_database.connect_mysql_db()
@@ -17,20 +17,20 @@ add_parser.add_argument("task_description")
 
 #delete
 delete_parser = subparsers.add_parser("delete")
-delete_parser.add_argument("task_id")
+delete_parser.add_argument("task_id",type=int)
 
 #update
 update_parser = subparsers.add_parser("update")
-update_parser.add_argument("task_id")
+update_parser.add_argument("task_id",type=int)
 update_parser.add_argument("new_task_description")
 
 #mark-in-progress
 in_progress_parser = subparsers.add_parser("mark-in-progress")
-in_progress_parser.add_argument("task_id")
+in_progress_parser.add_argument("task_id",type=int)
 
 #mark-in-progress
 done_parser = subparsers.add_parser("mark-done")
-done_parser.add_argument("task_id")
+done_parser.add_argument("task_id",type=int)
 
 #list
 list_parser = subparsers.add_parser("list")
@@ -98,3 +98,5 @@ elif args_dict["action"] == "list":
         print("not recognized argument for list command.")
 else:
     print("command not recognized.")
+
+connection.close()

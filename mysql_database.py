@@ -44,10 +44,8 @@ def create_table(connection):
         cursor = connection.cursor()
         cursor.execute(TABLE)
     except mysql.connector.Error as err:
-        if err == errorcode.ER_TABLE_EXISTS_ERROR:
-            log(f"Error from MySQL: {err.msg}")
-        else:
-            log(f"Error from MySQL: {err.msg}")
+        log(f"Error from MySQL: {err.msg}")
+       
 
 def add_task(connection, description, status='todo'):
     params = (description, status)
@@ -72,7 +70,11 @@ def update_task(connection, task_id, new_description):
     try:
         cursor.execute(query,params)
         connection.commit()
-        print(f'Task {task_id} changed to {new_description} sucessfully.')
+        if cursor.rowcount > 0:
+            print(f'Task {task_id} changed to {new_description} sucessfully.')
+        else:
+            print(f"Task {task_id} not found.")
+        
     except mysql.connector.Error as err:
         log(f'Error updating task {task_id}: {err.msg}')
 
@@ -85,7 +87,10 @@ def delete_task(connection, task_id):
     try:
         cursor.execute(query,params)
         connection.commit()
-        print(f'Task {task_id} deleted succesfully.')
+        if cursor.rowcount > 0:
+            print(f'Task {task_id} deleted succesfully.')
+        else:
+            print(f"Task {task_id} not found.")
     except mysql.connector.Error as err:
         log(f'Error updating task {task_id}: {err.msg}')
 
@@ -99,7 +104,10 @@ def update_status_task(connection, task_id, new_status):
     try:
         cursor.execute(query,params)
         connection.commit()
-        print(f'Task {task_id} status changed to {new_status} sucessfully.')
+        if cursor.rowcount > 0:
+            print(f'Task {task_id} status changed to {new_status} sucessfully.')
+        else:
+            print(f'Error chaning status to task {task_id}. Maybe it doesn\'t exists or status is incorrect.')
     except mysql.connector.Error as err:
         log(f'Error updating task {task_id}: {err.msg}')
 
