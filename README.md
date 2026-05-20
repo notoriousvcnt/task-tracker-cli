@@ -26,7 +26,7 @@ Clonar y luego completar .env (mirar .env.example)
 
 ## Detalles
 
-Basada en las especificaciones de [Task Tracker CLI](https://roadmap.sh/projects/task-tracker) , la única diferencia es que la base de datos está basada en MySQL.
+Basada en las especificaciones de https://roadmap.sh/projects/task-tracker , la única diferencia es que la base de datos está basada en MySQL.
 
 ## Por implementar
 
