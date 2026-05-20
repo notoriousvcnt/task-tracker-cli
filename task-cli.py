@@ -1,10 +1,14 @@
 import argparse
 import mysql_database
+from simple_log import log
+import simple_log
+
 
 connection = mysql_database.connect_mysql_db()
 
 # ---- ADD COMMANDS VIA PARSER AND SUBPARSERS ---- #
 parser = argparse.ArgumentParser();
+parser.add_argument("--debug","-d",action="store_true")
 subparsers = parser.add_subparsers(dest="action")
 
 #add
@@ -36,6 +40,7 @@ list_parser.add_argument("status",nargs="?")
 
 args = parser.parse_args()
 
+
 # ----- AUXILIARY FUNCTIONS ---------------- #
 
 def toDict(args):
@@ -50,9 +55,12 @@ def print_dict(cli_args):
 # ------------------------ ROUTER ------------- #
 args_dict = toDict(args)
 
+if args_dict["debug"] == True:
+    simple_log.active = True
+
 if args_dict["action"] == "add":
     task_description = args_dict["task_description"]
-    print(f"adding task {task_description}")
+    log(f"adding task {task_description}")
     mysql_database.add_task(connection, task_description)
 elif args_dict["action"] == "update":
     task_id = args_dict["task_id"]
@@ -60,31 +68,31 @@ elif args_dict["action"] == "update":
     mysql_database.update_task(connection, task_id, new_description)
 elif args_dict["action"] == "delete":
     task_id = args_dict["task_id"]
-    print(f"deleting task {task_id}")
+    log(f"deleting task {task_id}")
     mysql_database.delete_task(connection, task_id)
 elif args_dict["action"] == "mark-in-progress":
     task_id = args_dict["task_id"]
     new_status = "in-progress"
-    print(f"marking in progress task {task_id}")
+    log(f"marking in progress task {task_id}")
     mysql_database.update_status_task(connection, task_id, new_status)
 elif args_dict["action"] == "mark-done":
     task_id = args_dict["task_id"]
     new_status = "done"
-    print(f"marking done task {task_id}")
+    log(f"marking done task {task_id}")
     mysql_database.update_status_task(connection, task_id, new_status)
 elif args_dict["action"] == "list":
     status = args_dict["status"]
     if  status == None:
-        print("listing all tasks.")
+        log("listing all tasks.")
         mysql_database.list_all_tasks(connection)
     elif status == "done":
-        print("listing done tasks.")
+        log("listing done tasks.")
         mysql_database.list_tasks(connection, status)
     elif status == "in-progress":
-        print("listing in-progress tasks.")
+        log("listing in-progress tasks.")
         mysql_database.list_tasks(connection, status)
     elif status == "todo":
-        print("listing pending tasks.")
+        log("listing pending tasks.")
         mysql_database.list_tasks(connection, status)
     else:
         print("not recognized argument for list command.")

@@ -2,6 +2,7 @@ import mysql.connector
 from mysql.connector import errorcode
 import os
 from dotenv import load_dotenv
+from simple_log import log
 
 #load .env
 load_dotenv()
@@ -14,8 +15,8 @@ db_password = os.getenv("DB_PASSWORD")
 TABLE = """
         CREATE TABLE IF NOT EXISTS tasks( 
         task_id INT NOT NULL AUTO_INCREMENT,
-        description VARCHAR(50) NOT NULL, 
-        status VARCHAR(50) DEFAULT 'todo', 
+        description VARCHAR(255) NOT NULL, 
+        status ENUM('todo', 'in-progress', 'done') DEFAULT 'todo', 
         createdAt DATETIME DEFAULT NOW(),
         updatedAt DATETIME DEFAULT NOW(),
         PRIMARY KEY (task_id)
@@ -31,34 +32,22 @@ def connect_mysql_db():
     try:
         connection = mysql.connector.connect(**config)
         cursor = connection.cursor()
-        print("Connected succesfully to database.")
+        log("Connected succesfully to database.")
         create_table(connection)
         return connection
     except mysql.connector.Error as err:
-        print(err.msg)
-
-def check_if_table_exists(connection, table_name):
-    cursor = connection.cursor()
-    cursor.execute("SHOW TABLES")
-    for table in cursor:
-        if table[0] == table_name:
-            return True
-    return False
+        raise SystemExit(f"Could not connect to MySQL database: {err.msg}")
 
 
 def create_table(connection):
-    cursor = connection.cursor()
     try:
-        if check_if_table_exists(connection,"tasks"):
-            print("Table Already Exists.")
-        else:
-            cursor.execute(TABLE)
-            print(f"Creating tasks table.")
+        cursor = connection.cursor()
+        cursor.execute(TABLE)
     except mysql.connector.Error as err:
         if err == errorcode.ER_TABLE_EXISTS_ERROR:
-            pass
+            log(f"Error from MySQL: {err.msg}")
         else:
-            print(f"Error from MySQL: {err.msg}")
+            log(f"Error from MySQL: {err.msg}")
 
 def add_task(connection, description, status='todo'):
     params = (description, status)
@@ -71,7 +60,7 @@ def add_task(connection, description, status='todo'):
         connection.commit()
         print(f"Task '{description}' added to database.")
     except mysql.connector.Error as err:
-        print(err.msg)
+        log(err.msg)
 
 def update_task(connection, task_id, new_description):
     params = (new_description, task_id)
@@ -85,7 +74,7 @@ def update_task(connection, task_id, new_description):
         connection.commit()
         print(f'Task {task_id} changed to {new_description} sucessfully.')
     except mysql.connector.Error as err:
-        print(f'Error updating task {task_id}: {err.msg}')
+        log(f'Error updating task {task_id}: {err.msg}')
 
 def delete_task(connection, task_id):
     cursor = connection.cursor()
@@ -98,7 +87,7 @@ def delete_task(connection, task_id):
         connection.commit()
         print(f'Task {task_id} deleted succesfully.')
     except mysql.connector.Error as err:
-        print(f'Error updating task {task_id}: {err.msg}')
+        log(f'Error updating task {task_id}: {err.msg}')
 
 def update_status_task(connection, task_id, new_status):
     params = (new_status, task_id)
@@ -112,12 +101,12 @@ def update_status_task(connection, task_id, new_status):
         connection.commit()
         print(f'Task {task_id} status changed to {new_status} sucessfully.')
     except mysql.connector.Error as err:
-        print(f'Error updating task {task_id}: {err.msg}')
+        log(f'Error updating task {task_id}: {err.msg}')
 
 def list_tasks(connection, status):
     cursor = connection.cursor()
     params = (status,)
-    query = """SELECT task_id, description
+    query = """SELECT task_id, description, status
     FROM tasks 
     WHERE status = %s;
     """
@@ -125,19 +114,19 @@ def list_tasks(connection, status):
         cursor.execute(query,params)
         resultados = cursor.fetchall()
         for resultado in resultados:
-            print(f"{resultado[0]} - {resultado[1]}")
+            print(f"{resultado[0]} - {resultado[1]} - status: {resultado[2]}")
     except mysql.connector.Error as err:
-         print(f'Error listing all tasks with status {status}: {err.msg}')
+        log(f'Error listing all tasks with status {status}: {err.msg}')
 
 def list_all_tasks(connection):
     cursor = connection.cursor()
-    query = """SELECT task_id, description
+    query = """SELECT task_id, description, status
     FROM tasks;
     """
     try:
         cursor.execute(query)
         resultados = cursor.fetchall()
         for resultado in resultados:
-            print(f"{resultado[0]} - {resultado[1]}")
+            print(f"{resultado[0]} - {resultado[1]} - status: {resultado[2]}")
     except mysql.connector.Error as err:
-         print(f'Error listing all tasks: {err.msg}')
+         log(f'Error listing all tasks: {err.msg}')
